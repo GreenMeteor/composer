@@ -1,0 +1,20 @@
+{
+    "id": "composer",
+    "version": "1.0.0",
+    "name": "Composer Update",
+    "description": "Update your composer installed HumHub instance.",
+    "humhub": {
+        "minVersion": "1.15"
+    },
+    "keywords": ["composer"],
+    "homepage": "https://shop.greenmeteor.net/en/modules/29-discord-integrations.html",
+    "issues": "https://github.com/GreenMeteor/premium-modules",
+    "authors": [
+        {
+            "name": "Green Meteor",
+            "email": "hello@greenmeteor.net",
+            "homepage": "https://greenmeteor.net",
+            "role": "Developer"
+        }
+    ]
+}

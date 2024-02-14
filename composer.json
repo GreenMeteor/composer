@@ -1,0 +1,15 @@
+{
+    "name": "greenmeteor/composer",
+    "description": "Update your composer installed HumHub instance",
+    "type": "humhub-module",
+    "license": "AGPL",
+    "authors": [
+        {
+            "name": "Green Meteor",
+            "email": "hello@greenmeteor.net"
+        }
+    ],
+    "require": {
+        "php": "^8.0"
+    }
+}
