@@ -1,7 +1,7 @@
 <?php
 
+use humhub\modules\ui\form\widgets\ActiveForm;
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
 
 ?>
 
@@ -12,7 +12,17 @@ use yii\widgets\ActiveForm;
         </div>
         <div class="panel-body">
             <?php $form = ActiveForm::begin(['action' => ['composer/index'], 'method' => 'post']); ?>
-            <?= Html::submitButton('Run Command', ['class' => 'btn btn-primary']); ?>
+
+            <!-- Dropdown button with three options -->
+            <div class="btn-group">
+                <select name="option" class="form-control">
+                    <option value="self-update">Self-Update</option>
+                    <option value="update">Update</option>
+                    <option value="install">Install</option>
+                </select>
+                
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
             <?php ActiveForm::end(); ?>
 
             <?= Html::tag('h2', 'Output'); ?>
