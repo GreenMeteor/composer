@@ -20,17 +20,17 @@ class ComposerController extends Controller
             // Define the Composer command based on the selected option
             switch ($option) {
                 case 'self-update':
-                    $command = ['/usr/local/bin/composer', 'self-update'];
+                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'self-update'];
                     break;
                 case 'update':
-                    $command = ['/usr/local/bin/composer', 'update'];
+                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'update', '--dev'];
                     break;
                 case 'install':
-                    $command = ['/usr/local/bin/composer', 'install'];
+                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'install', '--dev'];
                     break;
                 default:
                     // Default to self-update if no option is selected
-                    $command = ['/usr/local/bin/composer', 'update'];
+                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'update'];
             }
 
             // Create a new Process instance
