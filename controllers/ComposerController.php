@@ -6,8 +6,8 @@ use Yii;
 use yii\helpers\Url;
 use Composer\Factory;
 use Composer\IO\BufferIO;
-use humhub\components\Controller;
 use Symfony\Component\Console\Input\ArrayInput;
+use humhub\modules\admin\components\Controller;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 require_once(Yii::getAlias('@composer') . '/vendor' . '/autoload.php');
