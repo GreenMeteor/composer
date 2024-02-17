@@ -3,52 +3,59 @@
 namespace humhub\modules\composer\controllers;
 
 use Yii;
-use Symfony\Component\Process\Process;
+use yii\helpers\Url;
+use Composer\Factory;
+use Composer\IO\BufferIO;
 use humhub\components\Controller;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
+
+require_once(Yii::getAlias('@composer') . '/vendor' . '/autoload.php');
 
 class ComposerController extends Controller
 {
     public function actionIndex()
     {
-        $output = '';
+        // Set the HOME environment variable to the user's home directory
+        putenv('HOME=' . $_SERVER['DOCUMENT_ROOT']);
 
-        // Check if the form was submitted
-        if (Yii::$app->request->isPost) {
-            // Get the selected command option from the form
-            $option = Yii::$app->request->post('option');
+        // Assume $someCondition and $anotherCondition are defined elsewhere
+        $someCondition = true;
+        $anotherCondition = false;
 
-            // Define the Composer command based on the selected option
-            switch ($option) {
-                case 'self-update':
-                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'self-update'];
-                    break;
-                case 'update':
-                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'update', '--dev'];
-                    break;
-                case 'install':
-                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'install', '--dev'];
-                    break;
-                default:
-                    // Default to self-update if no option is selected
-                    $command = [Yii::getAlias('@composer/vendor/composer/composer/bin/composer'), 'update'];
-            }
+        // Determine the command based on some condition or input
+        $command = 'self-update';
 
-            // Create a new Process instance
-            $process = new Process($command);
-
-            // Run the command
-            $process->run();
-
-            // Check if the command was successful
-            if ($process->isSuccessful()) {
-                // Get the command output
-                $output = $process->getOutput();
-            } else {
-                // Get the error output if the command failed
-                $output = $process->getErrorOutput();
-            }
+        // Condition to determine the command
+        if ($someCondition) {
+            $command = 'install';
+        } elseif ($anotherCondition) {
+            $command = 'update';
         }
 
-        return $this->render('index', ['output' => $output]);
+        // Prepare input with the determined command
+        $inputOptions = ['command' => $command];
+
+        // Create an instance of BufferIO
+        $io = new BufferIO();
+
+        // Load Composer application
+        $composer = Factory::create($io, Url::to('composer.json'));
+
+        // Create Composer Application instance
+        $application = new \Composer\Console\Application();
+        $application->setAutoExit(false);
+
+        // Prepare input and output
+        $input = new ArrayInput($inputOptions);
+        $output = new BufferedOutput();
+
+        // Run the Composer command
+        $application->run($input, $output);
+
+        // Get the output of the command
+        $outputText = $output->fetch();
+
+        return $this->render('index', ['output' => $outputText]);
     }
 }
