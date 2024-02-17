@@ -13,16 +13,14 @@ use yii\helpers\Html;
         <div class="panel-body">
             <?php $form = ActiveForm::begin(['action' => ['composer/index'], 'method' => 'post']); ?>
 
-            <!-- Dropdown button with three options -->
-            <div class="btn-group">
-                <select name="option" class="form-control">
-                    <option value="self-update">Self-Update</option>
-                    <option value="update">Update</option>
-                    <option value="install">Install</option>
-                </select>
-                
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <select name="option" class="form-control">
+                <option value="self-update">Self-Update</option>
+                <option value="update">Update</option>
+                <option value="install">Install</option>
+            </select>
+            <br>
+            <?= Html::submitButton('Submit', ['class' => 'btn btn-primary']) ?>
+
             <?php ActiveForm::end(); ?>
 
             <?= Html::tag('h2', 'Output'); ?>
