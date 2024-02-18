@@ -2,7 +2,7 @@
     "name": "greenmeteor/composer",
     "description": "Update your composer installed HumHub instance",
     "type": "humhub-module",
-    "license": "AGPL",
+    "license": "AGPL-3.0-or-later",
     "authors": [
         {
             "name": "Green Meteor",
