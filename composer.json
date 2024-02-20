@@ -12,7 +12,6 @@
     "require": {
         "php": "^8.1",
         "symfony/process": "^5.0",
-        "gitonomy/gitlib": "^2.1"
     },
     "require-dev": {
         "composer/composer": "^2.2"
