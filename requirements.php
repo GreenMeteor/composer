@@ -7,26 +7,21 @@ if (PHP_VERSION_ID < 80100) {
 }
 
 if (!extension_loaded('mbstring')) {
-    $requirements[] = 'You need to enable MBString extension in your PHP configuration on the server.';
+    $requirements[] = 'MBString extension is enabled on your PHP configuration.';
 }
 
 if (!extension_loaded('json')) {
-    $requirements[] = 'You need to enable JSON extension in your PHP configuration on the server.';
+    $requirements[] = 'JSON extension is enabled on your PHP configuration.';
 }
 
 if (!extension_loaded('curl')) {
-    $requirements[] = 'You need to enable cURL extension in your PHP configuration on the server.';
-}
-
-if (!function_exists('exec')) {
-    $requirements[] = 'You need to enable exec() function in your PHP configuration on the server.';
+    $requirements[] = 'cURL extension is enabled on your PHP configuration.';
 }
 
 // Check directory writability
-$directory = 'protected/vendor';
-$fullPath = Yii::getAlias('@app') . '/' . $directory;
-if (!is_writable($fullPath)) {
-    $requirements[] = "The directory '$directory' is not writable by the PHP process.";
+$fullPath = Yii::getAlias('@app') . '/protected/vendor';
+if (is_writable($fullPath)) {
+    $requirements[] = "The directory '$fullPath' is writable by the PHP process.";
 }
 
 return $requirements;
