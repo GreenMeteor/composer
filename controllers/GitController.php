@@ -35,49 +35,52 @@ class GitController extends Controller
         curl_close($curl);
 
         if ($status != 200) {
-            return $this->render('pull', ['message' => 'Error: Not a GitHub repository.']);
-        }
+            Yii::$app->session->setFlash('error', 'Error: Not a GitHub repository.');
+        } else {
+            // Execute GitHub clone command
+            $output = [];
+            $clone = 'cd ' . $workingDirectory . ' && git clone ' . $repositoryUrl . ' humhub 2>&1';
+            exec($clone, $output, $returnCode);
 
-        // Execute GitHub clone command
-        $output = [];
-        $clone = 'cd ' . $workingDirectory . ' && git clone ' . $repositoryUrl . ' humhub 2>&1';
-        exec($clone, $output, $returnCode);
+            Yii::info('Clone Command executed: ' . $clone);
+            Yii::info('Output: ' . print_r($output, true));
+            Yii::info('Return code: ' . $returnCode);
 
-        Yii::info('Clone Command executed: ' . $clone);
-        Yii::info('Output: ' . print_r($output, true));
-        Yii::info('Return code: ' . $returnCode);
-
-        if ($returnCode === 0) {
-            // Copy files and directories except for index.php, .htaccess, /protected/config, and /protected/vendor
-            $ignore = ['index.php', '.htaccess', '/protected/config', '/protected/vendor'];
-            $files = glob($workingDirectory . '/humhub/*');
-            foreach ($files as $file) {
-                $fileName = basename($file);
-                if (!in_array($fileName, $ignore)) {
-                    if (is_dir($file)) {
-                        $targetDir = $workingDirectory . '/' . $fileName;
-                        if (!file_exists($targetDir)) {
-                            mkdir($targetDir, 0755, true);
+            if ($returnCode === 0) {
+                // Copy files and directories except for index.php, .htaccess, /protected/config, and /protected/vendor
+                $ignore = ['index.php', '.htaccess', '/protected/config', '/protected/vendor'];
+                $files = glob($workingDirectory . '/humhub/*');
+                foreach ($files as $file) {
+                    $fileName = basename($file);
+                    if (!in_array($fileName, $ignore)) {
+                        if (is_dir($file)) {
+                            $targetDir = $workingDirectory . '/' . $fileName;
+                            if (!file_exists($targetDir)) {
+                                mkdir($targetDir, 0755, true);
+                            }
+                            $this->copyDirectory($file, $targetDir);
+                        } else {
+                            copy($file, $workingDirectory . '/' . $fileName);
                         }
-                        $this->copyDirectory($file, $targetDir);
-                    } else {
-                        copy($file, $workingDirectory . '/' . $fileName);
                     }
                 }
-            }
 
-            // Unlink the /humhub directory
-            $humhubDir = $workingDirectory . '/humhub';
-            if (is_dir($humhubDir)) {
-                $this->deleteDirectory($humhubDir);
-            }
+                // Delete all files within the /humhub directory
+                $this->deleteDirectoryContents($workingDirectory . '/humhub');
 
-            $message = 'Git clone and file copy successful.';
-        } else {
-            $message = 'Failed to clone from the HumHub Git repository. Return code: ' . $returnCode;
+                // Unlink the /humhub directory
+                $humhubDir = $workingDirectory . '/humhub';
+                if (is_dir($humhubDir)) {
+                    $this->deleteDirectory($humhubDir);
+                }
+
+                Yii::$app->session->setFlash('success', 'Git clone and file copy successful.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository. Return code: ' . $returnCode);
+            }
         }
 
-        return $this->render('pull', ['message' => $message, 'output' => $output]);
+        return $this->render('pull', ['output' => $output]);
     }
 
     /**
@@ -101,6 +104,21 @@ class GitController extends Controller
     }
 
     /**
+     * Recursively delete all files within a directory.
+     */
+    private function deleteDirectoryContents($dir)
+    {
+        $files = glob($dir . '/*');
+        foreach ($files as $file) {
+            if (is_dir($file)) {
+                $this->deleteDirectoryContents($file);
+            } else {
+                unlink($file);
+            }
+        }
+    }
+
+    /**
      * Recursively delete a directory and its contents.
      */
     private function deleteDirectory($dir)
@@ -112,9 +130,12 @@ class GitController extends Controller
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = $dir . '/' . $file;
-            is_dir($path) ? $this->deleteDirectory($path) : unlink($path);
+            if (is_dir($path)) {
+                $this->deleteDirectory($path);
+            } else {
+                unlink($path);
+            }
         }
-
         rmdir($dir);
     }
 }
