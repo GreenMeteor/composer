@@ -56,6 +56,15 @@ class ComposerController extends Controller
         // Get the output of the command
         $outputText = $output->fetch();
 
+        // Clear Composer cache
+        $composerCacheDir = getenv('COMPOSER_HOME') ?: (getenv('HOME') . DIRECTORY_SEPARATOR . '.composer');
+        $cacheFiles = glob($composerCacheDir . '/cache/*');
+        foreach ($cacheFiles as $cacheFile) {
+            if (is_file($cacheFile)) {
+                unlink($cacheFile);
+            }
+        }
+
         return $this->render('index', ['output' => $outputText]);
     }
 }
