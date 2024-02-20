@@ -14,6 +14,10 @@ if (!extension_loaded('json')) {
     $requirements[] = 'You need to enable JSON extension in your PHP configuration on the server.';
 }
 
+if (!extension_loaded('curl')) {
+    $requirements[] = 'You need to enable cURL extension in your PHP configuration on the server.';
+}
+
 // Check directory writability
 $directory = 'protected/vendor';
 $fullPath = Yii::getAlias('@app') . '/' . $directory;
