@@ -18,6 +18,10 @@ if (!extension_loaded('curl')) {
     $requirements[] = 'You need to enable cURL extension in your PHP configuration on the server.';
 }
 
+if (!function_exists('exec')) {
+    $requirements[] = 'You need to enable exec() function in your PHP configuration on the server.';
+}
+
 // Check directory writability
 $directory = 'protected/vendor';
 $fullPath = Yii::getAlias('@app') . '/' . $directory;
