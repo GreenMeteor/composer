@@ -13,12 +13,23 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <div class="panel-body">
-        <?= Html::tag('h2', 'Result'); ?>
-        <p><?= $message ?></p>
-        
+        <?php if (Yii::$app->session->hasFlash('success')): ?>
+            <div class="alert alert-success" role="alert">
+                <?= Yii::$app->session->getFlash('success') ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (Yii::$app->session->hasFlash('error')): ?>
+            <div class="alert alert-danger" role="alert">
+                <?= Yii::$app->session->getFlash('error') ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($output)): ?>
-            <?= Html::tag('h2', 'Output'); ?>
-            <pre><?= Html::encode(implode("\n", $output)) ?></pre>
+            <div class="output-container">
+                <?= Html::tag('h2', 'Output'); ?>
+                <pre><?= Html::encode(implode("\n", $output)) ?></pre>
+            </div>
         <?php endif; ?>
     </div>
 </div>
