@@ -6,22 +6,67 @@ if (PHP_VERSION_ID < 80100) {
     $requirements[] = 'Please upgrade to PHP Version 8.1 or later!';
 }
 
-if (!extension_loaded('mbstring')) {
+// Function to check if an extension is enabled in php.ini
+function is_extension_enabled($extension)
+{
+    return extension_loaded($extension);
+}
+
+// Function to check if a function is enabled in php.ini
+function is_function_enabled($function)
+{
+    return function_exists($function);
+}
+
+// Check if MBString extension is enabled
+if (!is_extension_enabled('mbstring')) {
     $requirements[] = 'MBString extension is enabled on your PHP configuration.';
 }
 
-if (!extension_loaded('json')) {
+// Check if JSON extension is enabled
+if (!is_extension_enabled('json')) {
     $requirements[] = 'JSON extension is enabled on your PHP configuration.';
 }
 
-if (!extension_loaded('curl')) {
+// Check if cURL extension is enabled
+if (!is_extension_enabled('curl')) {
     $requirements[] = 'cURL extension is enabled on your PHP configuration.';
 }
 
+// Check if exec() function is enabled
+if (!is_function_enabled('exec')) {
+    $requirements[] = 'You need to enable exec() function in your PHP configuration.';
+}
+
+// Check if unlink() function is enabled
+if (!is_function_enabled('unlink')) {
+    $requirements[] = 'You need to enable unlink() function in your PHP configuration.';
+}
+
+// Check if getenv() function is enabled
+if (!is_function_enabled('getenv')) {
+    $requirements[] = 'You need to enable getenv() function in your PHP configuration.';
+}
+
+// Check if putenv() function is enabled
+if (!is_function_enabled('putenv')) {
+    $requirements[] = 'You need to enable putenv() function in your PHP configuration.';
+}
+
+// Check if require_once() function is enabled
+if (!is_function_enabled('require_once')) {
+    $requirements[] = 'You need to enable require_once() function in your PHP configuration.';
+}
+
+// Check if mkdir() function is enabled
+if (!is_function_enabled('mkdir')) {
+    $requirements[] = 'You need to enable mkdir() function in your PHP configuration.';
+}
+
 // Check directory writability
-$fullPath = Yii::getAlias('@app') . '/protected/vendor';
-if (is_writable($fullPath)) {
-    $requirements[] = "The directory '$fullPath' is writable by the PHP process.";
+$fullPath = Yii::getAlias('@app') . '/vendor';
+if (!is_writable($fullPath)) {
+    $requirements[] = "The directory '$fullPath' is not writable by the PHP process.";
 }
 
 return $requirements;
