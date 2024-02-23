@@ -17,7 +17,7 @@ class GruntController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('layout');
+        return $this->render('index');
     }
 
     /**
