@@ -25,7 +25,7 @@ use kartik\alert\Alert;
             ]) ?>
 
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="nav-item active"> <!-- Add 'active' class here -->
+                <li role="presentation" class="nav-item active">
                     <a href="#build-assets" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Assets') ?></a>
                 </li>
                 <li role="presentation" class="nav-item">
@@ -40,7 +40,7 @@ use kartik\alert\Alert;
             </ul>
 
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="build-assets"> <!-- Add 'active' class here -->
+                <div role="tabpanel" class="tab-pane active" id="build-assets">
                     <?= $this->render('build-assets') ?>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="build-theme">
