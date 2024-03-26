@@ -54,7 +54,7 @@ if (!is_function_enabled('putenv')) {
 }
 
 // Check if require_once() function is enabled
-if (!is_function_enabled('require_once')) {
+if (is_function_enabled('require_once')) {
     $requirements[] = 'You need to enable require_once() function in your PHP configuration.';
 }
 

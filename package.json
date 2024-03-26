@@ -1,0 +1,21 @@
+{
+  "name": "greenmeteor/composer",
+  "version": "1.0.0",
+  "description": "Update your Composer installed HumHub instance",
+  "scripts": {
+    "grunt-build-assets": "grunt build-assets",
+    "grunt-build-theme": "grunt build-theme",
+    "grunt-build-search": "grunt build-search",
+    "grunt-migrate-up": "grunt migrate-up"
+  },
+  "author": {
+    "name": "Green Meteor",
+    "email": "hello@greenmeteor.net"
+  },
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "grunt": "^1.4.1",
+    "grunt-cli": "^1.4.3",
+    "symfony/process": "^5.0"
+  }
+}
