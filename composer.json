@@ -11,9 +11,42 @@
     ],
     "require": {
         "php": "^8.1",
-        "symfony/process": "^5.0"
+        "symfony/process": "^5.0",
+        "composer/installers": "^1.11",
+        "oyejorge/less.php": "^1.7"
     },
     "require-dev": {
-        "composer/composer": "^2.2"
+        "composer/composer": "^2.7"
+    },
+    "extra": {
+        "installer-types": ["grunt"],
+        "installer-paths": {
+            "web/grunt/{$name}/": ["gruntjs/grunt"]
+        }
+    },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "gruntjs/grunt",
+                "version": "1.4.1",
+                "dist": {
+                    "url": "https://registry.npmjs.org/grunt/-/grunt-1.4.1.tgz",
+                    "type": "tar"
+                },
+                "autoload": {
+                    "classmap": [
+                        "Gruntfile.js"
+                    ]
+                }
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true
+        }
     }
 }
