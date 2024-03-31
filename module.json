@@ -7,8 +7,8 @@
         "minVersion": "1.15"
     },
     "keywords": ["composer"],
-    "homepage": "https://shop.greenmeteor.net/en/modules/29-discord-integrations.html",
-    "issues": "https://github.com/GreenMeteor/premium-modules",
+    "homepage": "https://greenmeteor.net/",
+    "issues": "https://github.com/GreenMeteor/composer/issues",
     "authors": [
         {
             "name": "Green Meteor",
