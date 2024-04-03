@@ -2,14 +2,18 @@
 
 namespace humhub\modules\composer;
 
-class Module extends \humhub\components\Module
+use Yii;
+use yii\helpers\Url;
+use humhub\components\Module as BaseModule;
+
+class Module extends BaseModule
 {
     /**
      * @inheritdoc
      */
     public $resourcesPath = 'resources';
 
-    public $controllerNamespace = 'humhub\modules\composer\commands';
+    public $controllerNamespace = 'humhub\modules\composer\controllers';
 
     public function init()
     {
@@ -20,11 +24,15 @@ class Module extends \humhub\components\Module
     {
         return [
             'theme/compile' => 'composer\commands\ThemeController',
+            'refresh-assets' => 'composer\commands\RefreshAssetsController',
         ];
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getConfigUrl()
     {
-        return '/composer/composer/index';
+        return Url::to(['/composer/composer']);
     }
 }
