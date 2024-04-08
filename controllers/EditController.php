@@ -4,6 +4,7 @@ namespace humhub\modules\composer\controllers;
 
 use Yii;
 use yii\helpers\Url;
+use humhub\widgets\ModalClose;
 use yii\web\NotFoundHttpException;
 use humhub\modules\composer\models\EditForm;
 use humhub\modules\admin\components\Controller;
@@ -30,7 +31,7 @@ class EditController extends Controller
         $model->composerData = file_get_contents($composerJsonFile);
 
         if ($model->load(Yii::$app->request->post()) && $model->saveComposerData()) {
-            return $this->redirect(Url::home());
+            return ModalClose::widget(['saved' => true]);
         }
 
         return $this->renderAjax('composer', [
