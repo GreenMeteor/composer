@@ -41,7 +41,7 @@ class EditForm extends Model
      */
     public function saveComposerData()
     {
-        $composerJsonFile = Yii::getAlias('@app') . '/composer.json';
+        $composerJsonFile = $_SERVER['DOCUMENT_ROOT'] . '/composer.json';
 
         if (!file_exists($composerJsonFile)) {
             throw new \RuntimeException('composer.json file not found.');
