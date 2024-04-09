@@ -30,8 +30,11 @@ class EditController extends Controller
         $model = new EditForm();
         $model->composerData = file_get_contents($composerJsonFile);
 
-        if ($model->load(Yii::$app->request->post()) && $model->saveComposerData()) {
-            return ModalClose::widget(['saved' => true]);
+        if ($model->load(Yii::$app->request->post())) {
+            // Validate the model
+            if ($model->validate() && $model->saveComposerData()) {
+                return ModalClose::widget(['saved' => true]);
+            }
         }
 
         return $this->renderAjax('composer', [
