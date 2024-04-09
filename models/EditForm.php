@@ -7,8 +7,6 @@ use yii\base\Model;
 
 /**
  * EditForm is the model class for handling composer.json editing.
- *
- * @property string $composerData The content of the composer.json file.
  */
 class EditForm extends Model
 {
@@ -20,8 +18,22 @@ class EditForm extends Model
     public function rules()
     {
         return [
-            [['composerData'], 'string'],
+            ['composerData', 'string'],
+            ['composerData', 'validateJson'],
         ];
+    }
+
+    /**
+     * Validate JSON format.
+     */
+    public function validateJson($attribute, $params)
+    {
+        if (!$this->hasErrors()) {
+            json_decode($this->$attribute);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->addError($attribute, 'Invalid JSON format.');
+            }
+        }
     }
 
     /**
@@ -49,7 +61,12 @@ class EditForm extends Model
 
         $composerData = json_decode($this->composerData, true);
 
-        // Save updated composer.json file
+        // Ensure "replace" field is an empty object if it's empty
+        if (empty($composerData['replace'])) {
+            $composerData['replace'] = new \stdClass();
+        }
+
+        // Save updated composer.json file without escaping slashes
         return file_put_contents($composerJsonFile, json_encode($composerData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }
