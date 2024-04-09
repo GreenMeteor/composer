@@ -1,13 +1,17 @@
 <?php
 
 use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+use yii\web\View;
 
 /* @var $this yii\web\View */
 /* @var $output array */
 
 $this->title = 'Build Search';
-$this->pageTitle = $this->title;
 $this->params['breadcrumbs'][] = $this->title;
+
+// Register PJAX library
+$this->registerJsFile('@web/static/js/jquery.pjax.modified.js', ['position' => View::POS_HEAD]);
 ?>
 
 <div id="build-search" class="panel panel-default">
@@ -17,38 +21,51 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <div class="panel-body" data-ui-widget="pjax-container">
-        <?php if (isset($output)): ?>
-            <?= Html::tag('h2', 'Output'); ?>
-            <?= Html::tag('pre', implode("\n", $output)); ?>
-        <?php endif; ?>
+        <div id="output-container">
+            <?php if(isset($output)): ?>
+                <?= Html::tag('h2', 'Output'); ?>
+                <?= Html::tag('pre', implode("\n", $output)); ?>
+            <?php endif; ?>
+        </div>
 
-        <!-- Button to trigger the command -->
-        <?= Html::button('Run Command', [
-            'class' => 'btn btn-primary',
-            'data' => [
-                'pjax' => 1, // Enable PJAX for the button click
-                'action' => '/composer/grunt/build-search',
-            ],
-        ]) ?>
+        <?php $form = ActiveForm::begin(['id' => 'run-command-form']); ?>
+        
+        <div class="form-group">
+            <?= Html::submitButton('Run Command', ['id' => 'run-command-btn', 'class' => 'btn btn-primary']) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
     </div>
 </div>
 
 <?php
 // Register JS to handle the PJAX button click
 $this->registerJs('
-    $(document).on("click", "[data-ui-widget=pjax-container] [data-pjax=1]", function(event) {
+    $(document).on("submit", "#run-command-form", function(event) {
         event.preventDefault();
-        var $this = $(this);
-        var container = $this.closest("[data-ui-widget=pjax-container]");
+        var $form = $(this);
+        var $btn = $form.find(":submit");
+        var formData = $form.serialize();
+        
+        $btn.button("loading");
+        
         $.ajax({
             type: "POST",
-            url: $this.data("action"),
-            data: "' . Yii::$app->request->csrfParam . '=' . Yii::$app->request->csrfToken . '",
+            url: "' . Yii::$app->urlManager->createUrl(['/composer/grunt/build-search']) . '/build-search",
+            data: formData,
             success: function(response) {
-                container.html(response);
+                if (response.success) {
+                    // Update the container with the command output
+                    $("#output-container").html("<h2>Output</h2><pre>" + response.output.join("\n") + "</pre>");
+                } else {
+                    console.error(response.error);
+                }
             },
             error: function(xhr, status, error) {
                 console.error(error);
+            },
+            complete: function() {
+                $btn.button("reset");
             }
         });
     });
