@@ -2,12 +2,16 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\web\View;
 
 /* @var $this yii\web\View */
 /* @var $output array */
 
 $this->title = 'Build Assets';
 $this->params['breadcrumbs'][] = $this->title;
+
+// Register PJAX library
+$this->registerJsFile('@web/static/js/jquery.pjax.modified.js', ['position' => View::POS_HEAD]);
 ?>
 
 <div id="build-assets" class="panel panel-default">
@@ -19,15 +23,15 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="panel-body" data-ui-widget="pjax-container">
         <div id="output-container">
             <?php if(isset($output)): ?>
-            <?= Html::tag('h2', 'Output'); ?>
-            <?= Html::tag('pre', implode("\n", $output)); ?>
+                <?= Html::tag('h2', 'Output'); ?>
+                <?= Html::tag('pre', implode("\n", $output)); ?>
             <?php endif; ?>
         </div>
 
         <?php $form = ActiveForm::begin(['id' => 'run-command-form']); ?>
         
         <div class="form-group">
-            <?= Html::submitButton('Run Command', ['id' => 'run-command-btn', 'class' => 'btn btn-primary', 'data' => ['pjax' => 1, 'action' => '/composer/grunt/build-assets']]) ?>
+            <?= Html::submitButton('Run Command', ['id' => 'run-command-btn', 'class' => 'btn btn-primary']) ?>
         </div>
 
         <?php ActiveForm::end(); ?>
@@ -47,7 +51,7 @@ $this->registerJs('
         
         $.ajax({
             type: "POST",
-            url: $form.attr("action"),
+            url: "' . Yii::$app->urlManager->createUrl(['/composer/grunt/build-assets']) . '/build-assets",
             data: formData,
             success: function(response) {
                 if (response.success) {
