@@ -11,11 +11,35 @@ use humhub\modules\admin\components\Controller;
 class GitController extends Controller
 {
     /**
-     * Pulls changes from the HumHub Git repository (master branch) into the specified directory.
+     * Renders the view for initiating the pull operation.
+     *
+     * @return string The rendered view.
+     */
+    public function actionPull()
+    {
+        return $this->render('pull');
+    }
+
+    /**
+     * Handles the pull operation when the button is clicked.
      *
      * @return string The rendered view displaying the result of the pull operation.
      */
-    public function actionPull()
+    public function actionPerformPull()
+    {
+        if (Yii::$app->request->isPost) {
+            // Perform pull operation
+            $output = $this->pullFromRepository();
+            return $this->render('pull', ['output' => $output]);
+        }
+    }
+
+    /**
+     * Pulls changes from the HumHub Git repository (master branch) into the specified directory.
+     *
+     * @return array Output of the pull operation.
+     */
+    private function pullFromRepository()
     {
         // Define the URL of the HumHub repository
         $repositoryUrl = 'https://github.com/humhub/humhub';
@@ -51,9 +75,17 @@ class GitController extends Controller
             Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository after '.$maxRetries.' retries.');
         }
 
-        return $this->render('pull', ['output' => $output]);
+        return $output;
     }
 
+    /**
+     * Executes the Git pull operation.
+     *
+     * @param string $repositoryUrl The URL of the Git repository.
+     * @param string $workingDirectory The working directory for the pull operation.
+     * @param array $output Reference variable to store the output of the pull operation.
+     * @return bool Whether the pull operation was successful.
+     */
     private function performPull($repositoryUrl, $workingDirectory, &$output)
     {
         // Check if it is a GitHub repository
@@ -103,6 +135,13 @@ class GitController extends Controller
         }
     }
 
+    /**
+     * Copies a directory recursively.
+     *
+     * @param string $source The source directory.
+     * @param string $destination The destination directory.
+     * @return void
+     */
     private function copyDirectory($source, $destination)
     {
         if (!is_dir($destination)) {
@@ -120,6 +159,12 @@ class GitController extends Controller
         }
     }
 
+    /**
+     * Deletes all contents of a directory recursively.
+     *
+     * @param string $dir The directory path.
+     * @return void
+     */
     private function deleteDirectoryContents($dir)
     {
         $files = glob($dir . '/*');
