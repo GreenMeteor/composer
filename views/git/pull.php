@@ -45,5 +45,9 @@ $requirements = require Yii::getAlias('@composer/requirements.php');
                 <pre><?= Html::encode(implode("\n", $output)) ?></pre>
             </div>
         <?php endif; ?>
+
+        <?= Html::beginForm(['perform-pull'], 'post') ?>
+            <?= Html::submitButton('Pull from Git Repository', ['class' => 'btn btn-primary']) ?>
+        <?= Html::endForm() ?>
     </div>
 </div>
