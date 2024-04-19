@@ -1,6 +1,9 @@
 <?php
 
+use yii\helpers\Url;
 use yii\helpers\Html;
+use humhub\widgets\Button;
+use humhub\modules\ui\icon\widgets\Icon;
 
 $this->title = 'Git Pull';
 $this->params['breadcrumbs'][] = ['label' => 'Composer', 'url' => ['/composer']];
@@ -11,6 +14,8 @@ $requirements = require Yii::getAlias('@composer/requirements.php');
 ?>
 <div class="panel panel-default">
     <div class="panel-heading">
+        <?= Button::asLink(Icon::get('git'))->link([Url::to('/composer/git/pull')])->cssClass('pull-right btn btn-default')->tooltip('Git') ?>
+        <?= Button::asLink(Icon::get('file-code-o'))->link([Url::to('/composer/grunt/index')])->cssClass('pull-right btn btn-default')->tooltip('Grunt') ?>
         <?= Html::tag('h1', Html::encode($this->title)); ?>
     </div>
 
@@ -36,6 +41,7 @@ $requirements = require Yii::getAlias('@composer/requirements.php');
 
         <?= Html::beginForm(['pull'], 'post') ?>
             <?= Html::dropDownList('branch', 'master', ['master' => 'Master', 'develop' => 'Develop']) ?>
+            <br>
             <br>
             <?= Html::submitButton('Pull from Git Repository', ['class' => 'btn btn-primary']) ?>
             <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
