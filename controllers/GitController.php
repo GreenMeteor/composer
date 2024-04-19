@@ -11,11 +11,44 @@ use humhub\modules\admin\components\Controller;
 class GitController extends Controller
 {
     /**
-     * Pulls changes from the HumHub Git repository (master branch) into the specified directory.
+     * Handles the pull operation when the button is clicked.
      *
      * @return string The rendered view displaying the result of the pull operation.
      */
     public function actionPull()
+    {
+        // Check if the form is submitted
+        if (Yii::$app->request->isPost) {
+            // Verify CSRF token
+            $this->validateCsrfToken();
+
+            // Perform the pull operation
+            $branch = Yii::$app->request->post('branch', 'master');
+            $output = $this->pullFromRepository($branch);
+
+            // Render the view with the pull result
+            return $this->render('pull', ['output' => $output]);
+        }
+
+        // Render the initial pull form view
+        return $this->render('pull');
+    }
+
+    private function validateCsrfToken()
+    {
+        $token = Yii::$app->request->post('_csrf');
+        if (!Yii::$app->getRequest()->validateCsrfToken($token)) {
+            throw new BadRequestHttpException('Invalid CSRF token');
+        }
+    }
+
+    /**
+     * Pulls changes from the HumHub Git repository (master or develop branch) into the specified directory.
+     *
+     * @param string $branch The branch to pull from.
+     * @return array Output messages from the pull operation.
+     */
+    private function pullFromRepository($branch = 'master')
     {
         // Define the URL of the HumHub repository
         $repositoryUrl = 'https://github.com/humhub/humhub';
@@ -35,7 +68,7 @@ class GitController extends Controller
             $this->deleteDirectoryContents($workingDirectory . '/humhub');
 
             // Perform the pull operation
-            $pullResult = $this->performPull($repositoryUrl, $workingDirectory, $output);
+            $pullResult = $this->performPull($repositoryUrl, $workingDirectory, $branch, $output);
 
             if ($pullResult === true) {
                 Yii::$app->session->setFlash('success', 'Git clone and file copy successful.');
@@ -51,10 +84,19 @@ class GitController extends Controller
             Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository after '.$maxRetries.' retries.');
         }
 
-        return $this->render('pull', ['output' => $output]);
+        return $output;
     }
 
-    private function performPull($repositoryUrl, $workingDirectory, &$output)
+    /**
+     * Performs the Git clone operation.
+     *
+     * @param string $repositoryUrl The URL of the Git repository.
+     * @param string $workingDirectory The working directory where to clone the repository.
+     * @param string $branch The branch to pull from.
+     * @param array $output Reference to the output array to store messages.
+     * @return bool Whether the clone operation was successful.
+     */
+    private function performPull($repositoryUrl, $workingDirectory, $branch, &$output)
     {
         // Check if it is a GitHub repository
         $curl = curl_init($repositoryUrl);
@@ -69,8 +111,8 @@ class GitController extends Controller
             return false;
         }
 
-        // Execute GitHub clone command
-        $clone = 'cd ' . $workingDirectory . ' && git clone ' . $repositoryUrl . ' humhub 2>&1';
+        // Execute GitHub clone command for the specified branch
+        $clone = 'cd ' . $workingDirectory . ' && git clone -b ' . $branch . ' ' . $repositoryUrl . ' humhub 2>&1';
         exec($clone, $output, $returnCode);
 
         Yii::info('Clone Command executed: ' . $clone);
@@ -89,7 +131,7 @@ class GitController extends Controller
                         if (!file_exists($targetDir)) {
                             mkdir($targetDir, 0755, true);
                         }
-                        $this->copyDirectory($file, $targetDir);
+                        $this->copyDirectory($file, $targetDir, $ignore);
                     } else {
                         copy($file, $workingDirectory . '/' . $fileName);
                     }
@@ -103,7 +145,14 @@ class GitController extends Controller
         }
     }
 
-    private function copyDirectory($source, $destination)
+    /**
+     * Copies files and directories recursively.
+     *
+     * @param string $source The source directory or file.
+     * @param string $destination The destination directory.
+     * @param array $ignore List of files or directories to ignore during copy.
+     */
+    private function copyDirectory($source, $destination, $ignore = [])
     {
         if (!is_dir($destination)) {
             mkdir($destination, 0755, true);
@@ -113,13 +162,23 @@ class GitController extends Controller
         foreach ($files as $file) {
             $dest = $destination . '/' . basename($file);
             if (is_dir($file)) {
-                $this->copyDirectory($file, $dest);
+                $this->copyDirectory($file, $dest, $ignore);
             } else {
-                copy($file, $dest);
+                if (!in_array(basename($file), $ignore)) {
+                    copy($file, $dest);
+                }
             }
         }
+
+        // Delete directory contents after copying is completed
+        $this->deleteDirectoryContents($source);
     }
 
+    /**
+     * Deletes the contents of a directory and the directory itself if empty.
+     *
+     * @param string $dir The directory path.
+     */
     private function deleteDirectoryContents($dir)
     {
         $files = glob($dir . '/*');
@@ -129,6 +188,12 @@ class GitController extends Controller
             } else {
                 unlink($file);
             }
+        }
+
+        // Check if the directory is completely empty
+        if (count(glob($dir . '/*')) === 0) {
+            // After deleting all files, remove the directory itself
+            rmdir($dir);
         }
     }
 }
