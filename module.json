@@ -1,10 +1,10 @@
 {
     "id": "composer",
-    "version": "1.0.0-beta.2",
+    "version": "1.0.0-beta.3",
     "name": "Composer Update",
     "description": "Update your composer installed HumHub instance.",
     "humhub": {
-        "minVersion": "1.15"
+        "minVersion": "1.16.0"
     },
     "keywords": ["composer"],
     "homepage": "https://greenmeteor.net/",
