@@ -28,7 +28,6 @@ class Module extends BaseModule
             // Define console command mappings
             $this->controllerMap = [
                 'theme' => 'humhub\modules\composer\commands\ThemeController',
-                'refresh' => 'humhub\modules\composer\commands\RefreshAssetsController',
             ];
         }
     }
@@ -37,7 +36,6 @@ class Module extends BaseModule
     {
         return [
             'theme/compile' => 'humhub\modules\composer\commands\ThemeController',
-            'refresh-assets' => 'humhub\modules\composer\commands\RefreshAssetsController',
         ];
     }
 
