@@ -33,10 +33,10 @@ class IDEHelper
     }
 
     /**
-     * Get the path to a specific theme's CSS directory.
+     * Get the path to a specific theme's composer.json directory.
      *
      * @param string $themeName The name of the theme.
-     * @return string The path to the theme's CSS directory.
+     * @return string The path to the theme's composer.json directory.
      */
     public static function getThemeComposerPath($themeName)
     {
@@ -55,10 +55,10 @@ class IDEHelper
     }
 
     /**
-     * Get the path to a specific module's CSS directory.
+     * Get the path to a specific module's composer.json directory.
      *
      * @param string $moduleName The name of the module.
-     * @return string The path to the module's CSS directory.
+     * @return string The path to the module's composer.json directory.
      */
     public static function getModuleComposerPath($moduleName)
     {
