@@ -69,4 +69,10 @@ if (!is_writable($fullPath)) {
     $requirements[] = "The directory '$fullPath' is not writable by the PHP process.";
 }
 
+// Check if composer.json exists in the specified directory
+$composerJsonPath = Yii::getAlias('@webroot') . '/composer.json';
+if (!file_exists($composerJsonPath)) {
+    $requirements[] = "composer.json file doesn't exist in the specified directory.";
+}
+
 return $requirements;
