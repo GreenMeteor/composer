@@ -4,6 +4,7 @@ namespace humhub\modules\composer\controllers;
 
 use Yii;
 use humhub\modules\admin\components\Controller;
+use yii\web\BadRequestHttpException;
 
 /**
  * GitController implements the actions for pulling from a Git repository.
@@ -15,7 +16,7 @@ class GitController extends Controller
      *
      * @return string The rendered view displaying the result of the pull operation.
      */
-    public function actionPull()
+    public function actionPull(): string
     {
         // Check if the form is submitted
         if (Yii::$app->request->isPost) {
@@ -34,7 +35,7 @@ class GitController extends Controller
         return $this->render('pull');
     }
 
-    private function validateCsrfToken()
+    private function validateCsrfToken(): void
     {
         $token = Yii::$app->request->post('_csrf');
         if (!Yii::$app->getRequest()->validateCsrfToken($token)) {
@@ -48,7 +49,7 @@ class GitController extends Controller
      * @param string $branch The branch to pull from.
      * @return array Output messages from the pull operation.
      */
-    private function pullFromRepository($branch = 'master')
+    private function pullFromRepository(string $branch = 'master'): array
     {
         // Define the URL of the HumHub repository
         $repositoryUrl = 'https://github.com/humhub/humhub';
@@ -81,7 +82,7 @@ class GitController extends Controller
         } while ($retryCount < $maxRetries);
 
         if ($pullResult !== true) {
-            Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository after '.$maxRetries.' retries.');
+            Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository after ' . $maxRetries . ' retries.');
         }
 
         return $output;
@@ -96,7 +97,7 @@ class GitController extends Controller
      * @param array $output Reference to the output array to store messages.
      * @return bool Whether the clone operation was successful.
      */
-    private function performPull($repositoryUrl, $workingDirectory, $branch, &$output)
+    private function performPull(string $repositoryUrl, string $workingDirectory, string $branch, array &$output): bool
     {
         // Check if it is a GitHub repository
         $curl = curl_init($repositoryUrl);
@@ -121,22 +122,13 @@ class GitController extends Controller
 
         if ($returnCode === 0) {
             // Copy files and directories except for index.php, .htaccess, /protected/config, and /protected/vendor
-            $ignore = ['index.php', '.htaccess', '/protected/config', '/protected/vendor'];
-            $files = glob($workingDirectory . '/humhub/*');
-            foreach ($files as $file) {
-                $fileName = basename($file);
-                if (!in_array($fileName, $ignore)) {
-                    if (is_dir($file)) {
-                        $targetDir = $workingDirectory . '/' . $fileName;
-                        if (!file_exists($targetDir)) {
-                            mkdir($targetDir, 0755, true);
-                        }
-                        $this->copyDirectory($file, $targetDir, $ignore);
-                    } else {
-                        copy($file, $workingDirectory . '/' . $fileName);
-                    }
-                }
-            }
+            $ignore = [
+                $workingDirectory . '/index.php',
+                $workingDirectory . '/.htaccess',
+                $workingDirectory . '/protected/config/common.php',
+                $workingDirectory . '/protected/vendor/*'
+            ];
+            $this->copyDirectory($workingDirectory . '/humhub', $workingDirectory, $ignore);
 
             return true;
         } else {
@@ -152,7 +144,7 @@ class GitController extends Controller
      * @param string $destination The destination directory.
      * @param array $ignore List of files or directories to ignore during copy.
      */
-    private function copyDirectory($source, $destination, $ignore = [])
+    private function copyDirectory(string $source, string $destination, array $ignore = []): void
     {
         if (!is_dir($destination)) {
             mkdir($destination, 0755, true);
@@ -160,11 +152,12 @@ class GitController extends Controller
 
         $files = glob($source . '/*');
         foreach ($files as $file) {
-            $dest = $destination . '/' . basename($file);
-            if (is_dir($file)) {
-                $this->copyDirectory($file, $dest, $ignore);
-            } else {
-                if (!in_array(basename($file), $ignore)) {
+            $relativePath = str_replace($source, '', $file);
+            if (!in_array($relativePath, $ignore)) {
+                $dest = $destination . '/' . basename($file);
+                if (is_dir($file)) {
+                    $this->copyDirectory($file, $dest, $ignore);
+                } else {
                     copy($file, $dest);
                 }
             }
@@ -179,21 +172,24 @@ class GitController extends Controller
      *
      * @param string $dir The directory path.
      */
-    private function deleteDirectoryContents($dir)
+    private function deleteDirectoryContents(string $dir): void
     {
         $files = glob($dir . '/*');
         foreach ($files as $file) {
             if (is_dir($file)) {
                 $this->deleteDirectoryContents($file);
+                if (is_dir($file)) {
+                    @rmdir($file);
+                }
             } else {
-                unlink($file);
+                @unlink($file);
             }
         }
 
         // Check if the directory is completely empty
         if (count(glob($dir . '/*')) === 0) {
             // After deleting all files, remove the directory itself
-            rmdir($dir);
+            @rmdir($dir);
         }
     }
 }
