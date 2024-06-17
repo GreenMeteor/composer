@@ -17,6 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'  # Specify the PHP version that meets your project requirements
+
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
@@ -30,5 +35,4 @@ jobs:
           ${{ runner.os }}-php-
 
     - name: Install dependencies
-      run: |
-        composer install --prefer-dist --no-progress || composer update --prefer-dist --no-progress
+      run: composer install --prefer-dist --no-progress
