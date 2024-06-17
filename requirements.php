@@ -2,8 +2,8 @@
 
 $requirements = [];
 
-if (PHP_VERSION_ID < 80100) {
-    $requirements[] = 'Please upgrade to PHP Version 8.1 or later!';
+if (PHP_VERSION_ID < 80200) {
+    $requirements[] = 'Please upgrade to PHP Version 8.2 or later!';
 }
 
 // Function to check if an extension is enabled in php.ini
