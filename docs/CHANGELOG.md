@@ -3,6 +3,7 @@ Changelog
 ### 1.0.0-beta.3 (TBA)
 - Chg: Remove unused code
 - Enh: Check if `composer.json` exists in root directory
+- Enh: IDE Helper class
 
 ### 1.0.0-beta.2 (4/19/2024)
 - Enh: Remove Automatic Git Pulling
