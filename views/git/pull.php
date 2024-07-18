@@ -14,7 +14,7 @@ $requirements = require Yii::getAlias('@composer/requirements.php');
 ?>
 <div class="panel panel-default">
     <div class="panel-heading">
-        <?= Button::asLink(Icon::get('git'))->link([Url::to('/composer/git/pull')])->cssClass('pull-right btn btn-default')->tooltip('Git') ?>
+        <?= Button::asLink(Icon::get('music'))->link([Url::to('/composer/composer/index')])->cssClass('pull-right btn btn-default')->tooltip('Composer') ?>
         <?= Button::asLink(Icon::get('file-code-o'))->link([Url::to('/composer/grunt/index')])->cssClass('pull-right btn btn-default')->tooltip('Grunt') ?>
         <?= Html::tag('h1', Html::encode($this->title)); ?>
     </div>
