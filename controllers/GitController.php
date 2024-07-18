@@ -6,32 +6,16 @@ use Yii;
 use humhub\modules\admin\components\Controller;
 use yii\web\BadRequestHttpException;
 
-/**
- * GitController implements the actions for pulling from a Git repository.
- */
 class GitController extends Controller
 {
-    /**
-     * Handles the pull operation when the button is clicked.
-     *
-     * @return string The rendered view displaying the result of the pull operation.
-     */
     public function actionPull(): string
     {
-        // Check if the form is submitted
         if (Yii::$app->request->isPost) {
-            // Verify CSRF token
             $this->validateCsrfToken();
-
-            // Perform the pull operation
             $branch = Yii::$app->request->post('branch', 'master');
             $output = $this->pullFromRepository($branch);
-
-            // Render the view with the pull result
             return $this->render('pull', ['output' => $output]);
         }
-
-        // Render the initial pull form view
         return $this->render('pull');
     }
 
@@ -43,32 +27,17 @@ class GitController extends Controller
         }
     }
 
-    /**
-     * Pulls changes from the HumHub Git repository (master or develop branch) into the specified directory.
-     *
-     * @param string $branch The branch to pull from.
-     * @return array Output messages from the pull operation.
-     */
     private function pullFromRepository(string $branch = 'master'): array
     {
-        // Define the URL of the HumHub repository
         $repositoryUrl = 'https://github.com/humhub/humhub';
-
-        // Set the working directory where you want to pull the changes
         $workingDirectory = $_SERVER['DOCUMENT_ROOT'];
-
-        // Log current working directory
         Yii::info('Current Working Directory: ' . $workingDirectory);
 
-        // Attempt the pull operation with retries
         $maxRetries = 3;
         $retryCount = 0;
         $output = [];
         do {
-            // Clean up previously generated folder contents
             $this->deleteDirectoryContents($workingDirectory . '/humhub');
-
-            // Perform the pull operation
             $pullResult = $this->performPull($repositoryUrl, $workingDirectory, $branch, $output);
 
             if ($pullResult === true) {
@@ -88,18 +57,8 @@ class GitController extends Controller
         return $output;
     }
 
-    /**
-     * Performs the Git clone operation.
-     *
-     * @param string $repositoryUrl The URL of the Git repository.
-     * @param string $workingDirectory The working directory where to clone the repository.
-     * @param string $branch The branch to pull from.
-     * @param array $output Reference to the output array to store messages.
-     * @return bool Whether the clone operation was successful.
-     */
     private function performPull(string $repositoryUrl, string $workingDirectory, string $branch, array &$output): bool
     {
-        // Check if it is a GitHub repository
         $curl = curl_init($repositoryUrl);
         curl_setopt($curl, CURLOPT_NOBODY, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -112,7 +71,6 @@ class GitController extends Controller
             return false;
         }
 
-        // Execute GitHub clone command for the specified branch
         $clone = 'cd ' . $workingDirectory . ' && git clone -b ' . $branch . ' ' . $repositoryUrl . ' humhub 2>&1';
         exec($clone, $output, $returnCode);
 
@@ -121,15 +79,13 @@ class GitController extends Controller
         Yii::info('Return code: ' . $returnCode);
 
         if ($returnCode === 0) {
-            // Copy files and directories except for index.php, .htaccess, /protected/config, and /protected/vendor
             $ignore = [
-                $workingDirectory . '/index.php',
-                $workingDirectory . '/.htaccess',
-                $workingDirectory . '/protected/config/common.php',
-                $workingDirectory . '/protected/vendor/*'
+                '/index.php',
+                '/.htaccess',
+                '/protected/config/common.php',
+                '/protected/vendor'
             ];
             $this->copyDirectory($workingDirectory . '/humhub', $workingDirectory, $ignore);
-
             return true;
         } else {
             Yii::$app->session->setFlash('error', 'Failed to clone from the HumHub Git repository. Return code: ' . $returnCode);
@@ -137,59 +93,69 @@ class GitController extends Controller
         }
     }
 
-    /**
-     * Copies files and directories recursively.
-     *
-     * @param string $source The source directory or file.
-     * @param string $destination The destination directory.
-     * @param array $ignore List of files or directories to ignore during copy.
-     */
     private function copyDirectory(string $source, string $destination, array $ignore = []): void
     {
         if (!is_dir($destination)) {
             mkdir($destination, 0755, true);
         }
 
-        $files = glob($source . '/*');
-        foreach ($files as $file) {
-            $relativePath = str_replace($source, '', $file);
-            if (!in_array($relativePath, $ignore)) {
-                $dest = $destination . '/' . basename($file);
-                if (is_dir($file)) {
-                    $this->copyDirectory($file, $dest, $ignore);
-                } else {
-                    copy($file, $dest);
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            $relPath = substr($item->getPathname(), strlen($source));
+            if ($this->shouldIgnore($relPath, $ignore)) {
+                continue;
+            }
+
+            $target = $destination . $relPath;
+
+            if ($item->isDir()) {
+                if (!is_dir($target)) {
+                    mkdir($target, 0755, true);
                 }
+            } else {
+                copy($item->getPathname(), $target);
+                chmod($target, 0644);
             }
         }
 
-        // Delete directory contents after copying is completed
         $this->deleteDirectoryContents($source);
     }
 
-    /**
-     * Deletes the contents of a directory and the directory itself if empty.
-     *
-     * @param string $dir The directory path.
-     */
+    private function shouldIgnore(string $path, array $ignore): bool
+    {
+        foreach ($ignore as $pattern) {
+            if (fnmatch($pattern, $path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function deleteDirectoryContents(string $dir): void
     {
-        $files = glob($dir . '/*');
-        foreach ($files as $file) {
-            if (is_dir($file)) {
-                $this->deleteDirectoryContents($file);
-                if (is_dir($file)) {
-                    @rmdir($file);
-                }
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isDir()) {
+                rmdir($file->getPathname());
             } else {
-                @unlink($file);
+                unlink($file->getPathname());
             }
         }
 
-        // Check if the directory is completely empty
-        if (count(glob($dir . '/*')) === 0) {
-            // After deleting all files, remove the directory itself
-            @rmdir($dir);
+        if (is_dir($dir)) {
+            rmdir($dir);
         }
     }
 }
