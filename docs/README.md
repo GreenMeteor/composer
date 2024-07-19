@@ -1,4 +1,5 @@
 # [HumHub](https://www.humhub.com/en/) Composer Module
+[![CLA assistant](https://cla-assistant.io/readme/badge/GreenMeteor/composer)](https://cla-assistant.io/GreenMeteor/composer)
 
 The HumHub Composer module streamlines dependency management within the HumHub platform. It offers automated dependency updates and Composer self-updates directly from the admin interface, ensuring installations stay up-to-date with ease.
 
