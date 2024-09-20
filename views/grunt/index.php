@@ -3,6 +3,7 @@
 use humhub\modules\ui\icon\widgets\Icon;
 use yii\helpers\Html;
 use kartik\alert\Alert;
+use humhub\modules\composer\widgets\GruntBuildWidget;
 
 /* @var $this \yii\web\View */
 /* @var $content string */
@@ -44,16 +45,29 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <div class="tab-content">
                 <div role="tabpanel" class="tab-pane active" id="build-assets">
-                    <?= $this->render('build-assets') ?>
+                    <?= Html::beginForm(['grunt/build-assets'], 'post', ['class' => 'form-inline']) ?>
+                        <?= Html::submitButton('Run Build Assets', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::endForm() ?>
+                    <?= GruntBuildWidget::widget(['task' => 'build-assets']) ?>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="build-theme">
-                    <?= $this->render('build-theme') ?>
+                    <?= Html::beginForm(['grunt/build-theme'], 'post', ['class' => 'form-inline']) ?>
+                        <?= Html::textInput('themeName', '', ['class' => 'form-control', 'placeholder' => 'Theme Name']) ?>
+                        <?= Html::submitButton('Run Build Theme', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::endForm() ?>
+                    <?= GruntBuildWidget::widget(['task' => 'build-theme', 'options' => ['themeName' => Yii::$app->request->post('themeName')]]) ?>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="build-search">
-                    <?= $this->render('build-search') ?>
+                    <?= Html::beginForm(['grunt/build-search'], 'post', ['class' => 'form-inline']) ?>
+                        <?= Html::submitButton('Run Build Search', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::endForm() ?>
+                    <?= GruntBuildWidget::widget(['task' => 'build-search']) ?>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="migrate-up">
-                    <?= $this->render('migrate-up') ?>
+                    <?= Html::beginForm(['grunt/migrate-up'], 'post', ['class' => 'form-inline']) ?>
+                        <?= Html::submitButton('Run Migrate Up', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::endForm() ?>
+                    <?= GruntBuildWidget::widget(['task' => 'migrate-up']) ?>
                 </div>
             </div>
         </div>
