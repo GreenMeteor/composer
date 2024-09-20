@@ -22,9 +22,9 @@ $this->registerJsFile('@web/static/js/jquery.pjax.modified.js', ['position' => V
     </div>
     <div class="panel-body" data-ui-widget="pjax-container">
         <div id="output-container">
-            <?php if(isset($output)): ?>
+            <?php if (isset($output) && !empty($output)): ?>
                 <?= Html::tag('h2', 'Output'); ?>
-                <?= Html::tag('pre', implode("\n", $output)); ?>
+                <?= Html::tag('pre', Html::encode(implode("\n", $output))); ?>
             <?php endif; ?>
         </div>
 
@@ -39,7 +39,7 @@ $this->registerJsFile('@web/static/js/jquery.pjax.modified.js', ['position' => V
 </div>
 
 <?php
-// Register JS to handle the PJAX button click
+// Register JS to handle the form submission
 $this->registerJs('
     $(document).on("submit", "#run-command-form", function(event) {
         event.preventDefault();
@@ -51,12 +51,12 @@ $this->registerJs('
         
         $.ajax({
             type: "POST",
-            url: "' . Yii::$app->urlManager->createUrl(['/composer/grunt/build-search']) . '/build-search",
+            url: "' . Yii::$app->urlManager->createUrl(['/composer/grunt/build-search']) . '",
             data: formData,
             success: function(response) {
                 if (response.success) {
                     // Update the container with the command output
-                    $("#output-container").html("<h2>Output</h2><pre>" + response.output.join("\n") + "</pre>");
+                    $("#output-container").html("<h2>Output</h2><pre>" + Html::encode(response.output.join(\"\\n\")) + "</pre>");
                 } else {
                     console.error(response.error);
                 }
