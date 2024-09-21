@@ -3,6 +3,7 @@
 namespace humhub\modules\composer\services;
 
 use Yii;
+use humhub\modules\composer\helpers\IDEHelper;
 
 /**
  * GruntService handles the execution of Grunt commands.
@@ -24,7 +25,8 @@ class GruntService
             throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
         }
 
-        $workingDirectory = $_SERVER['DOCUMENT_ROOT'];
+        // Use IDEHelper to get the root directory (webroot)
+        $workingDirectory = IDEHelper::getRootPath();
 
         if (!is_dir($workingDirectory)) {
             Yii::error('Invalid working directory: ' . $workingDirectory);
