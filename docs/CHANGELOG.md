@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### 1.0.0 (TBA)
+- Enh: Services
+- Enh: IDE Helper class
+- Enh: Use helper for GruntService
+
 ### 1.0.0-beta.3 (7/18/2024)
 - Chg: Remove unused code
 - Enh: Check if `composer.json` exists in root directory
