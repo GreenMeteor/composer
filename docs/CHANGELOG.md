@@ -1,7 +1,7 @@
 Changelog
 =========
 
-### 1.0.0 (TBA)
+### 1.0.0 (9/24/2024)
 - Enh: Services
 - Enh: IDE Helper class
 - Enh: Use helper for GruntService
