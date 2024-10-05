@@ -94,6 +94,7 @@ class GitService
 
     /**
      * Copies files from one directory to another, excluding specified files.
+     * Ensures directories and files are given 0755 permissions.
      *
      * @param string $source Source directory
      * @param string $destination Destination directory
@@ -120,6 +121,9 @@ class GitService
                 }
             } else {
                 copy($item->getPathname(), $target);
+                
+                // Set permissions to 0755 for both files and directories
+                chmod($target, 0755);
             }
         }
 
