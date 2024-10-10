@@ -2,52 +2,60 @@ name: PHP Composer
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: write
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@2.31.1
-      with:
-        php-version: '8.2'
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.31.1
+        with:
+          php-version: '8.2'
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v3
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
 
-    - name: Install or Update Composer dependencies
-      run: |
-        if [ -f composer.lock ]; then
-          composer install --prefer-dist --no-progress
-        else
-          composer update --prefer-dist --no-progress
-        fi
+      - name: Install or Update Composer dependencies
+        run: |
+          if [ -f composer.lock ]; then
+            composer install --prefer-dist --no-progress
+          else
+            composer update --prefer-dist --no-progress
+          fi
 
-    - name: Check if composer.lock has changed
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git diff --exit-code composer.lock || (
-          git add composer.lock &&
-          git commit -m "Update composer.lock" &&
-          git push
-        )
+      - name: Check if composer.lock has changed
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git diff --exit-code composer.lock || (
+            git add composer.lock vendor &&
+            git commit -m "Update composer.lock and vendor directory" &&
+            git push origin HEAD:vendor-update
+          )
+
+      - name: Create Pull Request
+        run: |
+          if git diff --quiet composer.lock; then
+            echo "No changes to commit."
+          else
+            echo "Creating Pull Request..."
+            gh pr create --title "Update composer.lock and vendor directory" --body "This PR updates dependencies." --base main --head vendor-update
+          fi
