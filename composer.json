@@ -12,8 +12,7 @@
     "require": {
         "php": "^8.2",
         "symfony/process": "^7.1",
-        "composer/installers": "^2.2",
-        "oyejorge/less.php": "^1.7"
+        "composer/installers": "^2.2"
     },
     "require-dev": {
         "composer/composer": "^2.7"
@@ -29,9 +28,9 @@
             "type": "package",
             "package": {
                 "name": "gruntjs/grunt",
-                "version": "1.4.1",
+                "version": "1.6.1",
                 "dist": {
-                    "url": "https://registry.npmjs.org/grunt/-/grunt-1.4.1.tgz",
+                    "url": "https://registry.npmjs.org/grunt/-/grunt-1.6.1.tgz",
                     "type": "tar"
                 },
                 "autoload": {
