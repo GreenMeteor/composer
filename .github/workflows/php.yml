@@ -1,4 +1,4 @@
-name: PHP Composer 
+name: PHP Composer
 
 on:
   push:
@@ -11,7 +11,37 @@ permissions:
   pull-requests: write
 
 jobs:
-  build:
+  # Job for handling push events
+  push-build:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.31.1
+        with:
+          php-version: '8.2'
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress
+
+  # Job for handling pull request events
+  pr-build:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,13 +57,10 @@ jobs:
       - name: Debug event info
         run: |
           echo "Event name: ${{ github.event_name }}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "Head ref: ${{ github.head_ref }}"
-            echo "Base ref: ${{ github.base_ref }}"
-          fi
+          echo "Head ref: ${{ github.head_ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
 
       - name: Fetch branch data for pull request
-        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           echo "Base branch for PR is: ${{ github.event.pull_request.base.ref }}"
@@ -41,12 +68,10 @@ jobs:
 
       - name: Check for composer.json changes
         id: check-changes
-        if: github.event_name == 'pull_request'
         run: |
           git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD | grep -q "^composer.json$" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
 
       - name: Output check-changes result
-        if: github.event_name == 'pull_request'
         run: |
           echo "composer.json change detected: ${{ steps.check-changes.outputs.changed }}"
 
@@ -60,18 +85,18 @@ jobs:
             ${{ runner.os }}-php-
 
       - name: Update dependencies in PR
-        if: github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true'
+        if: steps.check-changes.outputs.changed == 'true'
         run: |
           echo "Running composer update because composer.json changed"
           composer update --prefer-dist --no-progress
 
       - name: Install dependencies
-        if: github.event_name != 'pull_request' || steps.check-changes.outputs.changed != 'true'
+        if: steps.check-changes.outputs.changed != 'true'
         run: |
           composer install --prefer-dist --no-progress
 
       - name: Commit and push updated lock file
-        if: github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true'
+        if: steps.check-changes.outputs.changed == 'true'
         run: |
           if git diff --exit-code composer.lock; then
             echo "No changes to composer.lock needed"
