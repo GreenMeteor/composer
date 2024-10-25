@@ -27,15 +27,29 @@ jobs:
           echo "Head ref: ${{ github.head_ref }}"
           echo "Base ref: ${{ github.base_ref }}"
 
-      - name: Fetch all branches
-        run: git fetch --all
+      - name: Fetch all branches and display branch info
+        run: |
+          git fetch --all
+          git branch -a
+          echo "Base branch for PR is: ${{ github.event.pull_request.base.ref }}"
+          echo "Head branch for PR is: ${{ github.head_ref }}"
 
       - name: Check for composer.json changes
         id: check-changes
         if: github.event_name == 'pull_request'
         run: |
-          BASE_BRANCH=${{ github.event.pull_request.base.ref }}
-          git diff --name-only origin/$BASE_BRANCH HEAD | grep -q "^composer.json$" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          echo "Comparing changes between origin/$BASE_BRANCH and HEAD..."
+          git diff --name-only origin/$BASE_BRANCH HEAD
+          if git diff --name-only origin/$BASE_BRANCH HEAD | grep -q "^composer.json$"; then 
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else 
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Output check-changes result
+        run: |
+          echo "composer.json change detected: ${{ steps.check-changes.outputs.changed }}"
 
       - name: Cache Composer packages
         id: composer-cache
@@ -47,18 +61,18 @@ jobs:
             ${{ runner.os }}-php-
 
       - name: Update dependencies in PR
-        if: github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true'
+        if: ${{ github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true' }}
         run: |
           echo "Running composer update because composer.json changed"
           composer update --prefer-dist --no-progress
 
       - name: Install dependencies
-        if: github.event_name != 'pull_request' || steps.check-changes.outputs.changed != 'true'
+        if: ${{ github.event_name != 'pull_request' || steps.check-changes.outputs.changed != 'true' }}
         run: |
           composer install --prefer-dist --no-progress
 
       - name: Commit and push updated lock file
-        if: github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true'
+        if: ${{ github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true' }}
         run: |
           if git diff --exit-code composer.lock; then
             echo "No changes to composer.lock needed"
