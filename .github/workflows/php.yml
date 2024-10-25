@@ -10,7 +10,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -23,13 +22,10 @@ jobs:
         with:
           php-version: '8.2'
           
-      - name: Check for composer.json changes
-        id: check-composer
-        run: |
-          git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+        
       - name: Cache Composer packages
-        if: steps.check-composer.outputs.changed == 'true'
         id: composer-cache
         uses: actions/cache@v3
         with:
@@ -38,13 +34,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
             
-      - name: Update dependencies if composer.json changed
-        if: steps.check-composer.outputs.changed == 'true'
+      - name: Check for composer.json changes
+        id: check-composer
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies (Push to main/develop)
+        if: github.event_name == 'push'
+        run: |
+          if [ -f composer.lock ]; then
+            composer install --prefer-dist --no-progress
+          else
+            composer update --prefer-dist --no-progress
+          fi
+
+      - name: Update dependencies if composer.json changed (PR)
+        if: github.event_name == 'pull_request' && steps.check-composer.outputs.changed == 'true'
         run: |
           composer update --prefer-dist --no-progress
           
-      - name: Commit and push if composer.lock changed
-        if: steps.check-composer.outputs.changed == 'true'
+      - name: Commit and push if composer.lock changed (PR)
+        if: github.event_name == 'pull_request' && steps.check-composer.outputs.changed == 'true'
         run: |
           if git diff --exit-code composer.lock; then
             echo "No changes to composer.lock needed"
