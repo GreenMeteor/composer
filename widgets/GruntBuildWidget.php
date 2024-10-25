@@ -21,7 +21,7 @@ class GruntBuildWidget extends Widget
 
     /**
      * @var array Additional options for the Grunt task.
-     * This can include parameters such as 'themeName' for theme builds or 'module' for migrations.
+     * This can include parameters such as 'module' for migrations.
      */
     public $options = [];
 
@@ -53,7 +53,7 @@ class GruntBuildWidget extends Widget
     public function run()
     {
         $validTasks = [
-            'build-assets', 'build-search', 'build-theme',
+            'build-assets', 'build-search',
             'migrate-up'
         ];
 
