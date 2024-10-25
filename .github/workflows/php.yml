@@ -13,10 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
+          
       - name: Setup PHP
         uses: shivammathur/setup-php@2.31.1
         with:
@@ -28,12 +27,15 @@ jobs:
           echo "Head ref: ${{ github.head_ref }}"
           echo "Base ref: ${{ github.base_ref }}"
 
+      - name: Fetch all branches
+        run: git fetch --all
+
       - name: Check for composer.json changes
         id: check-changes
         if: github.event_name == 'pull_request'
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git --no-pager diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+          BASE_BRANCH=${{ github.event.pull_request.base.ref }}
+          git diff --name-only origin/$BASE_BRANCH HEAD | grep -q "^composer.json$" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
 
       - name: Cache Composer packages
         id: composer-cache
