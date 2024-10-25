@@ -22,12 +22,17 @@ jobs:
         with:
           php-version: '8.2'
           
-      - name: Check lock file status
-        id: check-lock
-        continue-on-error: true
-        run: composer validate --strict
-          
+      - name: Validate composer files
+        id: validate
+        run: |
+          if ! composer validate --strict; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Cache Composer packages
+        if: github.event_name == 'pull_request'
         id: composer-cache
         uses: actions/cache@v3
         with:
@@ -36,25 +41,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
 
-      - name: Update dependencies if lock file is out of sync
-        if: steps.check-lock.outcome == 'failure' && github.event_name == 'pull_request'
+      - name: Update dependencies
+        if: steps.validate.outputs.needs_update == 'true' && github.event_name == 'pull_request'
         run: |
+          rm -f composer.lock
           composer update --prefer-dist --no-progress
           
-      - name: Install dependencies if lock file is valid
-        if: steps.check-lock.outcome == 'success'
+      - name: Install dependencies
+        if: steps.validate.outputs.needs_update != 'true'
+        run: composer install --prefer-dist --no-progress
+
+      - name: Commit and push if lock file was updated
+        if: steps.validate.outputs.needs_update == 'true' && github.event_name == 'pull_request'
         run: |
-          composer install --prefer-dist --no-progress
-          
-      - name: Commit and push updated lock file
-        if: steps.check-lock.outcome == 'failure' && github.event_name == 'pull_request'
-        run: |
-          if git diff --exit-code composer.lock; then
-            echo "No changes to composer.lock needed"
-          else
-            git config --global user.name 'github-actions[bot]'
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-            git add composer.lock vendor/
-            git commit -m "Update composer.lock to match composer.json changes"
-            git push
-          fi
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add composer.lock vendor/
+          git commit -m "Update composer.lock to match composer.json changes"
+          git push
