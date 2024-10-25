@@ -47,26 +47,6 @@ class GruntController extends Controller
     }
 
     /**
-     * Builds a theme using Grunt.
-     *
-     * @param string|null $themeName The name of the theme to build.
-     * @return string The rendering result.
-     */
-    public function actionBuildTheme()
-    {
-        $themeName = Yii::$app->request->post('themeName');
-
-        if ($themeName === null) {
-            throw new \yii\web\BadRequestHttpException('Theme name cannot be null.');
-        }
-
-        $gruntService = new GruntService();
-        $output = $gruntService->buildTheme($themeName);
-
-        return $this->asJson(['success' => true, 'output' => $output]);
-    }
-
-    /**
      * Builds the search index using Grunt.
      *
      * @return string The rendering result.
