@@ -1,0 +1,51 @@
+name: Check for Composer Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+
+permissions:
+  issues: write
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.31.1
+        with:
+          php-version: '8.2'
+          
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Check for Composer Updates
+        id: composer_updates
+        run: |
+          composer update --dry-run --lock | grep -E "Upgrading|New version" > updates.txt || true
+          if [ -s updates.txt ]; then
+            echo "Updates found"
+            echo "updates=true" >> $GITHUB_ENV
+          else
+            echo "No updates found"
+            echo "updates=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create Issue for Updates
+        if: env.updates == 'true'
+        uses: peter-evans/create-issue-from-file@v5.0.1
+        with:
+          title: "Composer Package Updates Available"
+          body: |
+            There are new updates available for Composer packages:
+
+            ```
+            $(cat updates.txt)
+            ```
+
+            Please consider running `composer update` to update the packages.
+          labels: "Meta: Composer Update"
