@@ -1,8 +1,8 @@
 <?php
 
-use humhub\modules\ui\icon\widgets\Icon;
 use yii\helpers\Html;
 use kartik\alert\Alert;
+use humhub\modules\ui\icon\widgets\Icon;
 use humhub\modules\composer\widgets\GruntBuildWidget;
 
 /* @var $this \yii\web\View */
@@ -33,9 +33,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <a href="#build-assets" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Assets') ?></a>
                 </li>
                 <li role="presentation" class="nav-item">
-                    <a href="#build-theme" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Theme') ?></a>
-                </li>
-                <li role="presentation" class="nav-item">
                     <a href="#build-search" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Search') ?></a>
                 </li>
                 <li role="presentation" class="nav-item">
@@ -49,13 +46,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= Html::submitButton('Run Build Assets', ['class' => 'btn btn-primary']) ?>
                     <?= Html::endForm() ?>
                     <?= GruntBuildWidget::widget(['task' => 'build-assets']) ?>
-                </div>
-                <div role="tabpanel" class="tab-pane" id="build-theme">
-                    <?= Html::beginForm(['grunt/build-theme'], 'post', ['class' => 'form-inline']) ?>
-                        <?= Html::textInput('themeName', '', ['class' => 'form-control', 'placeholder' => 'Theme Name']) ?>
-                        <?= Html::submitButton('Run Build Theme', ['class' => 'btn btn-primary']) ?>
-                    <?= Html::endForm() ?>
-                    <?= GruntBuildWidget::widget(['task' => 'build-theme', 'options' => ['themeName' => Yii::$app->request->post('themeName')]]) ?>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="build-search">
                     <?= Html::beginForm(['grunt/build-search'], 'post', ['class' => 'form-inline']) ?>
