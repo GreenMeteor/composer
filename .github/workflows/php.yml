@@ -10,20 +10,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Setup PHP
         uses: shivammathur/setup-php@2.31.1
         with:
           php-version: '8.2'
           
-      - name: Validate composer.json and composer.lock
-        run: composer validate --strict
-        
+      - name: Check for composer.json changes
+        id: check-composer
+        run: |
+          git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+
       - name: Cache Composer packages
+        if: steps.check-composer.outputs.changed == 'true'
         id: composer-cache
         uses: actions/cache@v3
         with:
@@ -32,48 +38,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
             
-      - name: Check for composer.json changes
-        id: check-composer
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            git diff --name-only HEAD^ HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install dependencies and update if needed
+      - name: Update dependencies if composer.json changed
         if: steps.check-composer.outputs.changed == 'true'
         run: |
           composer update --prefer-dist --no-progress
           
-      - name: Setup Git
+      - name: Commit and push if composer.lock changed
         if: steps.check-composer.outputs.changed == 'true'
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-      - name: Create branch and commit changes
-        if: steps.check-composer.outputs.changed == 'true'
-        run: |
-          TARGET_BRANCH="${{ github.event.pull_request.base.ref || github.ref_name }}"
-          BRANCH_NAME="composer-update-${TARGET_BRANCH}-${GITHUB_SHA::8}"
-          git checkout -b $BRANCH_NAME
-          git add composer.lock vendor/
-          git commit -m "Update composer.lock and vendor directory to match composer.json changes"
-          git push origin $BRANCH_NAME
-          
-      - name: Create Pull Request
-        if: steps.check-composer.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TARGET_BRANCH="${{ github.event.pull_request.base.ref || github.ref_name }}"
-          BRANCH_NAME="composer-update-${TARGET_BRANCH}-${GITHUB_SHA::8}"
-          PR_EXISTS=$(gh pr list --head $BRANCH_NAME --json number -q '.[0].number')
-          if [ -z "$PR_EXISTS" ]; then
-            gh pr create \
-              --title "[${TARGET_BRANCH}] Update Composer Dependencies" \
-              --body "This PR automatically updates composer.lock and vendor directory to match changes in composer.json on ${TARGET_BRANCH} branch" \
-              --base $TARGET_BRANCH \
-              --head $BRANCH_NAME
+          if git diff --exit-code composer.lock; then
+            echo "No changes to composer.lock needed"
+          else
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+            git add composer.lock vendor/
+            git commit -m "Update composer.lock and vendor directory to match composer.json changes"
+            git push
           fi
