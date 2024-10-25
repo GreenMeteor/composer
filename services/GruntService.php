@@ -14,7 +14,6 @@ class GruntService
      * Executes a Grunt command and returns the output.
      *
      * @param string $command The Grunt command to execute.
-     * @param string|null $themeName The name of the theme to build (optional).
      * @return array The output of the Grunt command.
      * @throws \yii\web\ForbiddenHttpException If the user is not allowed to perform this action.
      * @throws \yii\web\ServerErrorHttpException If the working directory is invalid.
