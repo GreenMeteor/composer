@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
           
@@ -22,10 +22,17 @@ jobs:
         with:
           php-version: '8.2'
           
+      - name: Debug event info
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Head ref: ${{ github.head_ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
+
       - name: Check for composer.json changes
         id: check-changes
         if: github.event_name == 'pull_request'
         run: |
+          git fetch origin ${{ github.base_ref }}
           git diff --name-only origin/${{ github.base_ref }} HEAD | grep -q "composer.json" && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
 
       - name: Cache Composer packages
@@ -41,6 +48,7 @@ jobs:
       - name: Update dependencies in PR
         if: github.event_name == 'pull_request' && steps.check-changes.outputs.changed == 'true'
         run: |
+          echo "Running composer update because composer.json changed"
           composer update --prefer-dist --no-progress
 
       # Regular install for non-PR or when composer.json hasn't changed
