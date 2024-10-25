@@ -64,17 +64,6 @@ class GruntService
     }
 
     /**
-     * Builds a theme using Grunt.
-     *
-     * @param string $themeName The name of the theme to build.
-     * @return array The output of the Grunt build-theme command.
-     */
-    public function buildTheme(string $themeName): array
-    {
-        return $this->executeCommand('build-theme', $themeName);
-    }
-
-    /**
      * Builds the search index using Grunt.
      *
      * @return array The output of the Grunt build-search command.
