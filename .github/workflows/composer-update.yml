@@ -2,7 +2,7 @@ name: Check for Composer Updates
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '0 0 * * 1,2,3,4,5'
 
 permissions:
   issues: write
