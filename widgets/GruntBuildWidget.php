@@ -61,30 +61,51 @@ class GruntBuildWidget extends Widget
             return Html::tag('pre', "Invalid Grunt task: {$this->task}");
         }
 
-        $task = escapeshellarg($this->task);
-        $optionString = $this->buildOptionString($this->options);
-        $command = "grunt {$task} {$optionString}";
-
         try {
-            $output = [];
-            $returnVar = 0;
-            exec($command, $output, $returnVar);
-            if ($returnVar !== 0) {
-                throw new \Exception("Grunt task '{$this->task}' failed with output: " . implode("\n", $output));
+            // Use array format for command to prevent shell injection
+            $command = ['grunt', $this->task];
+            
+            // Safely add options to the command array
+            foreach ($this->options as $key => $value) {
+                $command[] = '--' . $key;
+                $command[] = $value;
             }
-            return Html::tag('pre', Html::encode(implode("\n", $output)));
+            
+            // Use proc_open for safer execution with array arguments
+            $descriptorSpec = [
+                0 => ["pipe", "r"],  // stdin
+                1 => ["pipe", "w"],  // stdout
+                2 => ["pipe", "w"]   // stderr
+            ];
+            
+            $process = proc_open($command, $descriptorSpec, $pipes);
+            
+            if (is_resource($process)) {
+                // Close stdin as we don't need it
+                fclose($pipes[0]);
+                
+                // Get output
+                $output = stream_get_contents($pipes[1]);
+                $errorOutput = stream_get_contents($pipes[2]);
+                
+                // Close pipes
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                
+                // Get exit code
+                $returnVar = proc_close($process);
+                
+                if ($returnVar !== 0) {
+                    throw new \Exception("Grunt task '{$this->task}' failed with output: " . $output . $errorOutput);
+                }
+                
+                return Html::tag('pre', Html::encode($output));
+            } else {
+                throw new \Exception("Failed to start Grunt process");
+            }
         } catch (\Exception $e) {
             Yii::error($e->getMessage(), __METHOD__);
             return Html::tag('pre', 'Grunt build failed. Check application logs for details.');
         }
-    }
-
-    protected function buildOptionString($options)
-    {
-        $optionString = '';
-        foreach ($options as $key => $value) {
-            $optionString .= '--' . escapeshellarg($key) . ' ' . escapeshellarg($value) . ' ';
-        }
-        return trim($optionString);
     }
 }
