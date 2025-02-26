@@ -1,21 +1,31 @@
 <?php
 
+use yii\helpers\Url;
 use yii\helpers\Html;
 use kartik\alert\Alert;
+use humhub\widgets\Tabs;
 use humhub\modules\ui\icon\widgets\Icon;
 use humhub\modules\composer\widgets\GruntBuildWidget;
 
 /* @var $this \yii\web\View */
 /* @var $content string */
+/* @var $output string Output from the Grunt command, if any */
+/* @var $taskExecuted string The task that was executed, if any */
 
 $this->title = 'Manage Grunt Builders';
 $this->pageTitle = $this->title;
 $this->params['breadcrumbs'][] = $this->title;
+
+// Get active tab from request
+$activeTab = Yii::$app->request->get('tab', 'build-assets');
 ?>
+
 <div class="container">
     <div class="panel panel-default">
-        <div class="panel-body">
+        <div class="panel-heading">
             <h4><?= Html::encode($this->title) ?></h4>
+        </div>
+        <div class="panel-body">
             <div class="help-block">
                 <?= Yii::t('ComposerModule.base', 'Here you can manage different aspects of the Grunt builder.'); ?>
             </div>
@@ -28,37 +38,74 @@ $this->params['breadcrumbs'][] = $this->title;
                 'closeButton' => false,
             ]) ?>
 
-            <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="nav-item active">
-                    <a href="#build-assets" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Assets') ?></a>
-                </li>
-                <li role="presentation" class="nav-item">
-                    <a href="#build-search" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Build Search') ?></a>
-                </li>
-                <li role="presentation" class="nav-item">
-                    <a href="#migrate-up" class="nav-link" data-toggle="tab"><?= Yii::t('ComposerModule.base', 'Migrate Up') ?></a>
-                </li>
-            </ul>
+            <?= Tabs::widget([
+                'options' => ['id' => 'grunt-tabs'],
+                'items' => [
+                    [
+                        'label' => Yii::t('ComposerModule.base', 'Build Assets'),
+                        'url' => Url::to(['index', 'tab' => 'build-assets']),
+                        'active' => $activeTab == 'build-assets',
+                    ],
+                    [
+                        'label' => Yii::t('ComposerModule.base', 'Build Search'),
+                        'url' => Url::to(['index', 'tab' => 'build-search']),
+                        'active' => $activeTab == 'build-search',
+                    ],
+                    [
+                        'label' => Yii::t('ComposerModule.base', 'Migrate Up'),
+                        'url' => Url::to(['index', 'tab' => 'migrate-up']),
+                        'active' => $activeTab == 'migrate-up',
+                    ],
+                ]
+            ]); ?>
 
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="build-assets">
-                    <?= Html::beginForm(['grunt/build-assets'], 'post', ['class' => 'form-inline']) ?>
-                        <?= Html::submitButton('Run Build Assets', ['class' => 'btn btn-primary']) ?>
-                    <?= Html::endForm() ?>
-                    <?= GruntBuildWidget::widget(['task' => 'build-assets']) ?>
-                </div>
-                <div role="tabpanel" class="tab-pane" id="build-search">
-                    <?= Html::beginForm(['grunt/build-search'], 'post', ['class' => 'form-inline']) ?>
-                        <?= Html::submitButton('Run Build Search', ['class' => 'btn btn-primary']) ?>
-                    <?= Html::endForm() ?>
-                    <?= GruntBuildWidget::widget(['task' => 'build-search']) ?>
-                </div>
-                <div role="tabpanel" class="tab-pane" id="migrate-up">
-                    <?= Html::beginForm(['grunt/migrate-up'], 'post', ['class' => 'form-inline']) ?>
-                        <?= Html::submitButton('Run Migrate Up', ['class' => 'btn btn-primary']) ?>
-                    <?= Html::endForm() ?>
-                    <?= GruntBuildWidget::widget(['task' => 'migrate-up']) ?>
-                </div>
+                <?php if ($activeTab == 'build-assets'): ?>
+                    <div class="tab-pane active">
+                        <h5><?= Yii::t('ComposerModule.base', 'Build Assets') ?></h5>
+                        <?= Html::beginForm(['index', 'tab' => 'build-assets'], 'post', ['class' => 'form-inline']) ?>
+                            <?= Html::hiddenInput('task', 'build-assets') ?>
+                            <?= Html::submitButton('Run Build Assets', ['class' => 'btn btn-primary']) ?>
+                        <?= Html::endForm() ?>
+                        
+                        <?php if ($activeTab == 'build-assets' && isset($taskExecuted) && $taskExecuted == 'build-assets'): ?>
+                            <div class="grunt-output">
+                                <br>
+                                <?= $output ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php elseif ($activeTab == 'build-search'): ?>
+                    <div class="tab-pane active">
+                        <h5><?= Yii::t('ComposerModule.base', 'Build Search') ?></h5>
+                        <?= Html::beginForm(['index', 'tab' => 'build-search'], 'post', ['class' => 'form-inline']) ?>
+                            <?= Html::hiddenInput('task', 'build-search') ?>
+                            <?= Html::submitButton('Run Build Search', ['class' => 'btn btn-primary']) ?>
+                        <?= Html::endForm() ?>
+                        
+                        <?php if ($activeTab == 'build-search' && isset($taskExecuted) && $taskExecuted == 'build-search'): ?>
+                            <div class="grunt-output">
+                                <br>
+                                <?= $output ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="tab-pane active">
+                        <h5><?= Yii::t('ComposerModule.base', 'Migrate Up') ?></h5>
+                        <?= Html::beginForm(['index', 'tab' => 'migrate-up'], 'post', ['class' => 'form-inline']) ?>
+                            <?= Html::hiddenInput('task', 'migrate-up') ?>
+                            <?= Html::submitButton('Run Migrate Up', ['class' => 'btn btn-primary']) ?>
+                        <?= Html::endForm() ?>
+
+                        <?php if ($activeTab == 'migrate-up' && isset($taskExecuted) && $taskExecuted == 'migrate-up'): ?>
+                            <div class="grunt-output">
+                                <br>
+                                <?= $output ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
