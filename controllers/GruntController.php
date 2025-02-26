@@ -5,6 +5,7 @@ namespace humhub\modules\composer\controllers;
 use Yii;
 use humhub\modules\admin\components\Controller;
 use humhub\modules\composer\services\GruntService;
+use humhub\modules\composer\widgets\GruntBuildWidget;
 
 /**
  * GruntController implements the actions for managing Grunt tasks.
@@ -20,13 +21,38 @@ class GruntController extends Controller
     }
 
     /**
-     * Displays the index page.
+     * Main index action that handles all grunt tasks
      *
-     * @return string The rendering result.
+     * @return string The rendered view
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $tab = Yii::$app->request->get('tab', 'build-assets');
+        $output = '';
+        $taskExecuted = null;
+        
+        if (Yii::$app->request->isPost) {
+            $task = Yii::$app->request->post('task');
+            
+            $validTasks = ['build-assets', 'build-search', 'migrate-up'];
+            if (in_array($task, $validTasks)) {
+                $taskExecuted = $task;
+                $options = Yii::$app->request->post('options', []);
+                
+                $widget = new GruntBuildWidget([
+                    'task' => $task,
+                    'options' => $options
+                ]);
+                
+                $output = $widget->run();
+            }
+        }
+        
+        return $this->render('index', [
+            'activeTab' => $tab,
+            'output' => $output,
+            'taskExecuted' => $taskExecuted
+        ]);
     }
 
     /**
@@ -41,7 +67,7 @@ class GruntController extends Controller
             return $this->renderPartial('build-assets', ['output' => $output]);
         } catch (\Exception $e) {
             Yii::error('Error executing Grunt command: ' . $e->getMessage());
-            Yii::$app->session->setFlash('error', 'Error executing Grunt command: ' . $e->getMessage());
+            $this->view->error('error', 'Error executing Grunt command: ' . $e->getMessage());
             return $this->redirect(['index']);
         }
     }
@@ -58,7 +84,7 @@ class GruntController extends Controller
             return $this->renderPartial('build-search', ['output' => $output]);
         } catch (\Exception $e) {
             Yii::error('Error executing Grunt command: ' . $e->getMessage());
-            Yii::$app->session->setFlash('error', 'Error executing Grunt command: ' . $e->getMessage());
+            $this->view->error('error', 'Error executing Grunt command: ' . $e->getMessage());
             return $this->redirect(['index']);
         }
     }
@@ -76,7 +102,7 @@ class GruntController extends Controller
             return $this->renderPartial('migrate-up', ['output' => $output]);
         } catch (\Exception $e) {
             Yii::error('Error executing Grunt command: ' . $e->getMessage());
-            Yii::$app->session->setFlash('error', 'Error executing Grunt command: ' . $e->getMessage());
+            $this->view->error('error', 'Error executing Grunt command: ' . $e->getMessage());
             return $this->redirect(['index']);
         }
     }
